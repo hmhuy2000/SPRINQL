@@ -2,10 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.pth
+*.hdf5
 # C extensions
 *.so
-
+outputs/
 # Distribution / packaging
 .Python
 build/
@@ -14,6 +15,7 @@ dist/
 downloads/
 eggs/
 .eggs/
+logs/
 lib/
 lib64/
 parts/
@@ -122,12 +124,11 @@ celerybeat.pid
 # Environments
 .env
 .venv
-env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-
+ref_reward/
 # Spyder project settings
 .spyderproject
 .spyproject
