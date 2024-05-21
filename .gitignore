@@ -2,7 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.pth
 *.hdf5
 # C extensions
 *.so
@@ -128,7 +127,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-ref_reward/
 # Spyder project settings
 .spyderproject
 .spyproject
