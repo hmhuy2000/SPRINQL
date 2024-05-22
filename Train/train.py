@@ -18,16 +18,47 @@ from Sources.dataset.memory import Memory
 from Sources.utils.utils import evaluate,soft_update,evaluate_actor
 
 def get_args(cfg: DictConfig):
+    """
+    Get the arguments for the function.
+
+    Args:
+        cfg (DictConfig): The configuration dictionary.
+
+    Returns:
+        DictConfig: The updated configuration dictionary.
+    """
     cfg.device = "cuda"
     cfg.hydra_base_dir = os.getcwd()
     return cfg
 
 def save(agent, path):
+    """
+    Save the agent's state to the specified path.
+
+    Args:
+        agent: The agent object to be saved.
+        path (str): The path where the agent's state will be saved.
+
+    Returns:
+        None
+    """
     os.makedirs(path,exist_ok=True)
     print(f'save at path {path}')
     agent.save(path)
     
 def get_dataset(args):
+    """
+    Loads and preprocesses the dataset for training.
+
+    Args:
+        args: An object containing the arguments for loading the dataset.
+
+    Returns:
+        expert_buffer: A list of Memory objects containing the loaded expert data.
+        shift: The shift value used for normalizing the observations.
+        scale: The scale value used for normalizing the observations.
+    """
+    
     expert_buffer = []
     obs_arr = []
     for id,(dir,num) in enumerate(zip(args.env.sub_optimal_demo,args.env.num_sub_optimal_demo)):
@@ -49,6 +80,15 @@ def get_dataset(args):
 
 @hydra.main(config_path="../parameters", config_name="config")
 def main(cfg: DictConfig):
+    """
+    Main function for training the SPRINQL model.
+
+    Args:
+        cfg (DictConfig): Configuration dictionary.
+
+    Returns:
+        None
+    """
     args = get_args(cfg)
     print(OmegaConf.to_yaml(args))
 

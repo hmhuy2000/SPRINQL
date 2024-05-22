@@ -9,6 +9,37 @@ from Sources.utils.utils import soft_update
 
 
 class SAC(object):
+    """
+    Soft Actor-Critic (SAC) algorithm implementation.
+
+    Args:
+        obs_dim (int): Dimensionality of the observation space.
+        action_dim (int): Dimensionality of the action space.
+        batch_size (int): Size of the mini-batch for training.
+        args (Namespace): Command-line arguments.
+
+    Attributes:
+        gamma (float): Discount factor.
+        batch_size (int): Size of the mini-batch for training.
+        device (torch.device): Device to run the algorithm on.
+        args (Namespace): Command-line arguments.
+        first_log (bool): Flag to indicate if it's the first log.
+        temp_actor (None or object): Temporary actor object.
+        critic_tau (float): Interpolation factor for updating the target critic network.
+        learn_temp (bool): Flag to indicate if the temperature parameter is learned.
+        actor_update_frequency (int): Frequency of updating the actor network.
+        critic_target_update_frequency (int): Frequency of updating the target critic network.
+        critic (object): Critic network.
+        critic_target (object): Target critic network.
+        actor (object): Actor network.
+        log_alpha (torch.Tensor): Logarithm of the temperature parameter.
+        actor_optimizer (torch.optim.Adam): Optimizer for the actor network.
+        critic_optimizer (torch.optim.Adam): Optimizer for the critic network.
+        log_alpha_optimizer (torch.optim.Adam): Optimizer for the temperature parameter.
+        training (bool): Flag to indicate if the algorithm is in training mode.
+
+    """
+
     def __init__(self, obs_dim, action_dim, batch_size, args):
         self.gamma = args.gamma
         self.batch_size = batch_size
@@ -52,42 +83,114 @@ class SAC(object):
         self.critic_target.train()
 
     def train(self, training=True):
+        """
+        Set the training mode of the algorithm.
+
+        Args:
+            training (bool, optional): Flag to indicate if the algorithm is in training mode. 
+                Defaults to True.
+
+        """
         self.training = training
         self.actor.train(training)
         self.critic.train(training)
 
     @property
     def alpha(self):
+        """
+        Get the temperature parameter.
+
+        Returns:
+            torch.Tensor: Temperature parameter.
+
+        """
         return self.log_alpha.exp()
 
     @property
     def critic_net(self):
+        """
+        Get the critic network.
+
+        Returns:
+            object: Critic network.
+
+        """
         return self.critic
 
     @property
     def critic_target_net(self):
+        """
+        Get the target critic network.
+
+        Returns:
+            object: Target critic network.
+
+        """
         return self.critic_target
 
     def choose_action(self, state, sample=False):
+        """
+        Choose an action based on the given state.
+
+        Args:
+            state (numpy.ndarray): Current state.
+            sample (bool, optional): Flag to indicate if the action should be sampled from the 
+                distribution or not. Defaults to False.
+
+        Returns:
+            numpy.ndarray: Chosen action.
+
+        """
         state = torch.FloatTensor(state).to(self.device).unsqueeze(0)
         dist = self.actor(state)
         action = dist.sample() if sample else dist.mean
-        # assert action.ndim == 2 and action.shape[0] == 1
         return action.detach().cpu().numpy()[0]
 
     def getV(self, obs):
+        """
+        Get the value function for the given observations.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+
+        Returns:
+            torch.Tensor: Value function.
+
+        """
         action, log_prob, _ = self.actor.sample(obs)
         current_Q = self.critic(obs, action)
         current_V = current_Q - self.alpha.detach() * log_prob
         return current_V
 
     def get_targetV(self, obs):
+        """
+        Get the target value function for the given observations.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+
+        Returns:
+            torch.Tensor: Target value function.
+
+        """
         action, log_prob, _ = self.actor.sample(obs)
         target_Q = self.critic_target(obs, action)
         target_V = target_Q - self.alpha.detach() * log_prob
         return target_V
 
     def update(self, replay_buffer, logger, step):
+        """
+        Update the actor and critic networks.
+
+        Args:
+            replay_buffer (object): Replay buffer.
+            logger (object): Logger for logging the training progress.
+            step (int): Current training step.
+
+        Returns:
+            dict: Dictionary of losses.
+
+        """
         obs, next_obs, action, reward, done = replay_buffer.get_samples(
             self.batch_size, self.device)
 
@@ -105,6 +208,16 @@ class SAC(object):
         return losses
 
     def update_actor(self, obs):
+        """
+        Update the actor network.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+
+        Returns:
+            dict: Dictionary of losses.
+
+        """
         action, log_prob, _ = self.actor.sample(obs)
         actor_Q = self.critic(obs, action)
 
@@ -121,7 +234,6 @@ class SAC(object):
             'update/log_alpha': self.log_alpha.item(),
             }
 
-        # self.actor.log(logger, step)
         if self.learn_temp:
             self.log_alpha_optimizer.zero_grad()
             alpha_loss = (self.alpha *
@@ -136,8 +248,15 @@ class SAC(object):
             })
         return losses
 
-    # Save model parameters
     def save(self, path, suffix=""):
+        """
+        Save the model parameters.
+
+        Args:
+            path (str): Path to save the model parameters.
+            suffix (str, optional): Suffix to add to the saved file names. Defaults to "".
+
+        """
         actor_path = f"{path}/actor.pth"
         critic_path = f"{path}/critic.pth"
         critic_target_path = f"{path}/critic_target.pth"
@@ -146,8 +265,15 @@ class SAC(object):
         torch.save(self.critic.state_dict(), critic_path)
         torch.save(self.critic_target.state_dict(), critic_target_path)
 
-    # Load model parameters
     def load(self, path, suffix=""):
+        """
+        Load the model parameters.
+
+        Args:
+            path (str): Path to load the model parameters.
+            suffix (str, optional): Suffix added to the saved file names. Defaults to "".
+
+        """
         self.actor.load_state_dict(
             torch.load(f'{path}/actor.pth', 
                        map_location=self.device))
@@ -159,13 +285,35 @@ class SAC(object):
                        map_location=self.device))
 
     def sample_actions(self, obs, num_actions):
+        """
+        Sample multiple actions for the given observations.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+            num_actions (int): Number of actions to sample.
+
+        Returns:
+            tuple: Tuple containing the sampled actions and their log probabilities.
+
+        """
         obs_temp = obs.unsqueeze(1).repeat(1, num_actions, 1).view(
             obs.shape[0] * num_actions, obs.shape[1])
         action, log_prob, _ = self.actor.sample(obs_temp)
         return action, log_prob.view(obs.shape[0], num_actions, 1)
 
     def _get_tensor_values(self, obs, actions, network=None):
-        """For CQL style training."""
+        """
+        Get the tensor values for CQL style training.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+            actions (numpy.ndarray): Actions.
+            network (object, optional): Network to compute the tensor values. Defaults to None.
+
+        Returns:
+            torch.Tensor: Tensor values.
+
+        """
         action_shape = actions.shape[0]
         obs_shape = obs.shape[0]
         num_repeat = int(action_shape / obs_shape)
@@ -177,6 +325,18 @@ class SAC(object):
         return preds
 
     def cqlV(self, obs, network, num_random=10):
+        """
+        Compute the CQL value for the given observations.
+
+        Args:
+            obs (numpy.ndarray): Observations.
+            network (object): Network to compute the CQL value.
+            num_random (int, optional): Number of random actions to sample. Defaults to 10.
+
+        Returns:
+            torch.Tensor: CQL value.
+
+        """
         action, log_prob = self.sample_actions(obs, num_random)
         current_Q = self._get_tensor_values(obs, action, network)
 

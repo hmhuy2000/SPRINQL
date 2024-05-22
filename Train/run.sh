@@ -54,12 +54,13 @@ conda activate sprinql
 
 srun whichgpu
 
-# srun --gres=gpu:1 python -u Train/train_reference_reward.py env=cheetah agent=sac \
+# srun --gres=gpu:1 python -u Train/train_reference_reward.py env=cheetah \
 # env.sub_optimal_demo=[2,1,0] \
 # env.num_sub_optimal_demo=[25000,10000,1000] \
 # seed=0 
 
 
-srun --gres=gpu:1 python -u Train/train.py env=cheetah agent=sac \
-env.sub_optimal_demo=[2,1,0] env.num_sub_optimal_demo=[25000,10000,1000] \
+srun --gres=gpu:1 python -u Train/train.py env=cheetah \
+env.sub_optimal_demo=[2,1,0] \
+env.num_sub_optimal_demo=[25000,10000,1000] \
 seed=0 

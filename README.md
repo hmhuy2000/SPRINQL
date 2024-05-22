@@ -5,6 +5,7 @@ We focus on offline imitation learning (IL), which aims to mimic the expert’s 
 
 1. Clone the repos:
 ```
+.
 ```
 
 1. Create and activate conda environment
@@ -17,9 +18,9 @@ conda activate sprinql
 ```
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
-conda install -c conda-forge glew
-conda install -c conda-forge mesalib
-conda install -c menpo glfw3
+conda install -y -c conda-forge glew
+conda install -y -c conda-forge mesalib
+conda install -y -c menpo glfw3
 export CPATH=$CONDA_PREFIX/include
 pip install patchelf
 ```
@@ -56,7 +57,7 @@ pip install patchelf
 ```
 ## Usages
 
-Download dataset from [anonymized link](https://drive.google.com/drive/folders/1b_-ajbeseonjh5hX-G8ucNDfRUaGVlgE?usp=sharing) and place in the folder ```experts```.
+Download dataset from [anonymized link](https://drive.google.com/drive/folders/1b_-ajbeseonjh5hX-G8ucNDfRUaGVlgE?usp=sharing) and unzip in the main folder ```SPRINQL```.
 
 Replace ```env = [cheetah, ant, walker, hopper, humanoid]``` for different tasks.
 The scripts belows are for three datasets scenario with:
@@ -67,16 +68,18 @@ The scripts belows are for three datasets scenario with:
 
 1. run SPRINQL:
 ```
-python -u Train/train.py env=cheetah agent=sac \
-env.sub_optimal_demo=[2,1,0] env.num_sub_optimal_demo=[25000,10000,1000] \
+python -u Train/train.py env=cheetah \
+env.sub_optimal_demo=[2,1,0] \
+env.num_sub_optimal_demo=[25000,10000,1000] \
 seed=0 
 ```
  
 
 2. run training reference reward function from scratch:
 ```
-python -u Train/train_reference_reward.py env=cheetah agent=sac \
-env.sub_optimal_demo=[2,1,0] env.num_sub_optimal_demo=[25000,10000,1000] \
+python -u Train/train_reference_reward.py env=cheetah \
+env.sub_optimal_demo=[2,1,0] \
+env.num_sub_optimal_demo=[25000,10000,1000] \
 seed=0 
 ```
 

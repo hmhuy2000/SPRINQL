@@ -6,7 +6,23 @@ import torch
 from Sources.algos.sac import SAC
 from Sources.algos.sprinql import update, update_critic, update_actor, update_single_critic
 
-def make_agent(env,device, args):
+def make_agent(env, device, args):
+    """
+    Create an agent for reinforcement learning based on the given environment, device, and arguments.
+
+    Args:
+        env (gym.Env): The environment for the agent to interact with.
+        device (torch.device): The device to run the agent on.
+        args (OmegaConf): The configuration arguments for creating the agent.
+
+    Returns:
+        agent (SAC): The created agent for reinforcement learning.
+
+    Raises:
+        NotImplementedError: If no trained reward function is found for the given seed and environment.
+
+    """
+
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
     args.agent.obs_dim = obs_dim

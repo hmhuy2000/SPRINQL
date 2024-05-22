@@ -13,7 +13,19 @@ class Traj_dataset(Dataset):
                  states,actions,shift,scale,
                  label,dup,
                  partial_len: int = 50):
-        
+        """
+        Dataset class for trajectory data.
+
+        Args:
+            states: A list of states.
+            actions: A list of actions.
+            shift: A shift value.
+            scale: A scale value.
+            label: A label value.
+            dup: A duplication value.
+            partial_len: The length of partial trajectories.
+
+        """
         self.shift = shift
         self.scale = scale
         self.partial_len = partial_len
@@ -37,9 +49,26 @@ class Traj_dataset(Dataset):
 
 
     def __len__(self) -> int:
+        """
+        Returns the length of the dataset.
+
+        Returns:
+            The length of the dataset.
+
+        """
         return len(self.states)
 
     def __getitem__(self, i):
+        """
+        Returns the item at the given index.
+
+        Args:
+            i: The index of the item.
+
+        Returns:
+            A tuple containing the states, actions, and label at the given index.
+
+        """
         idx = random.randint(0, len(self.states[i]) - self.partial_len)
         states = np.array([self.states[i][j] for j in range(idx,idx+self.partial_len)])
         actions = np.array([self.actions[i][j] for j in range(idx,idx+self.partial_len)])
@@ -53,7 +82,8 @@ class Traj_dataset(Dataset):
 
 
 class ExpertDataset(Dataset):
-    """Dataset for expert trajectories.
+    """
+    Dataset for expert trajectories.
 
     Assumes expert dataset is a dict with keys {states, actions, rewards, lengths} with values containing a list of
     expert attributes of given shapes below. Each trajectory can be of different length.
@@ -72,22 +102,40 @@ class ExpertDataset(Dataset):
                  num_trajectories: int = 4,
                  subsample_frequency: int = 20,
                  seed: int = 0):
-        """Subsamples an expert dataset from saved expert trajectories.
+        """
+        Initializes the ExpertDataset.
 
         Args:
-            expert_location:          Location of saved expert trajectories.
-            num_trajectories:         Number of expert trajectories to sample (randomized).
-            subsample_frequency:      Subsamples each trajectory at specified frequency of steps.
-            deterministic:            If true, sample determinstic expert trajectories.
+            expert_location: Location of saved expert trajectories.
+            num_trajectories: Number of expert trajectories to sample (randomized).
+            subsample_frequency: Subsamples each trajectory at specified frequency of steps.
+            seed: The seed value for random number generation.
+
         """
         self.all_trajectories,self.full_trajectories = load_trajectories(expert_location, num_trajectories, seed)
         self.length = self.all_trajectories['states'].shape[0]
 
     def __len__(self) -> int:
-        """Return the length of the dataset."""
+        """
+        Returns the length of the dataset.
+
+        Returns:
+            The length of the dataset.
+
+        """
         return self.length
 
     def __getitem__(self, i):
+        """
+        Returns the item at the given index.
+
+        Args:
+            i: The index of the item.
+
+        Returns:
+            A tuple containing the states, next states, actions, rewards, and dones at the given index.
+
+        """
         return (self.all_trajectories['states'][i],
                 self.all_trajectories['next_states'][i],
                 self.all_trajectories['actions'][i],
@@ -98,16 +146,17 @@ class ExpertDataset(Dataset):
 def load_trajectories(expert_location: str,
                       num_trajectories: int = 10,
                       seed: int = 0) -> Dict[str, Any]:
-    """Load expert trajectories
+    """
+    Load expert trajectories.
 
     Args:
-        expert_location:          Location of saved expert trajectories.
-        num_trajectories:         Number of expert trajectories to sample (randomized).
-        deterministic:            If true, random behavior is switched off.
+        expert_location: Location of saved expert trajectories.
+        num_trajectories: Number of expert trajectories to sample (randomized).
+        seed: The seed value for random number generation.
 
     Returns:
-        Dict containing keys {"states", "lengths"} and optionally {"actions", "rewards"} with values
-        containing corresponding expert data attributes.
+        A dictionary containing the expert data attributes.
+
     """
     assert os.path.isfile(expert_location)
     

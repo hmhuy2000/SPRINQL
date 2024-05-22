@@ -22,6 +22,16 @@ def get_args(cfg: DictConfig):
 
 @hydra.main(config_path="../parameters", config_name="config")
 def main(cfg: DictConfig):
+    """
+    Main function for training the reference reward model.
+
+    Args:
+        cfg (DictConfig): Configuration dictionary.
+
+    Returns:
+        None
+    """
+
     args = get_args(cfg)
 
     random.seed(args.seed)
